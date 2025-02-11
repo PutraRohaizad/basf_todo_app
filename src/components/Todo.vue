@@ -73,9 +73,9 @@ const addTask = async () => {
 
     try {
       const res = await axios.post("http://127.0.0.1:8000/api/todos/", {
-      title: todoTitle.value,
-      description: todoDesc.value,
-      completed: false
+        title: todoTitle.value,
+        description: todoDesc.value,
+        completed: false
       });
 
       tasks.value.push(res.data);
@@ -113,7 +113,9 @@ const updateTask = async (task) => {
 
   try {
       const res = await axios.put(`http://127.0.0.1:8000/api/todos/${task.id}/`, {
-        completed: task.completed
+        title: task.title,
+        description: task.description,
+        completed: false
       });
 
       alert(`Todo task ${task.title} has been updated`)
