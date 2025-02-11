@@ -34,7 +34,7 @@
           </td>
           <td>{{ task.completed ? '✅ Done' : '⏳ Pending' }}</td>
           <td>
-            <button @click="removeTask(index)">❌</button>
+            <button @click="removeTask(index, task)">❌</button>
             <button @click="updateTask(task)">✍🏻</button>
           </td>
         </tr>
@@ -47,30 +47,81 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import axios from 'axios';
+
 
 const todoTitle = ref('')
 const todoDesc = ref('')
 const tasks = ref([])
 const searchQuery = ref('')
 
-
-const addTask = () => {  
-  if (todoTitle.value.trim() && todoDesc.value.trim()) {
-    tasks.value.push({ title: todoTitle.value, description: todoDesc.value, completed: false })
-    todoTitle.value = ''
-    todoDesc.value = ''
-  }else{
-    alert('The task is empty .. please fill in something :)')
+const fetchTodos = async () => {
+  try {
+    const res = await axios.get("http://127.0.0.1:8000/api/todos/");
+    tasks.value = res.data;
+  } catch (error) {
+    console.error("Error", error);
   }
-}
+};
 
-const removeTask = (index) => {
+// Fetch todos
+onMounted(fetchTodos);
+
+const addTask = async () => {  
+  if (todoTitle.value.trim() && todoDesc.value.trim()) {
+
+    try {
+      const res = await axios.post("http://127.0.0.1:8000/api/todos/", {
+      title: todoTitle.value,
+      description: todoDesc.value,
+      completed: false
+      });
+
+      tasks.value.push(res.data);
+
+      todoTitle.value = "";
+      todoDesc.value = "";
+
+    } catch (error) {
+      console.error("error", error);
+      alert("Faile to add todo task.");
+    }
+
+  } else {
+    alert("The task is empty .. please fill in something :)");
+  }
+};
+
+
+const removeTask = async (index, task) => {
   tasks.value = tasks.value.filter((task, i) => i != index)
+  try {
+      const res = await axios.delete(`http://127.0.0.1:8000/api/todos/${task.id}/`);
+      todoTitle.value = "";
+      todoDesc.value = "";
+      alert(`Todo task ${task.title} has been removed`)
+
+    } catch (error) {
+      console.error("error", error);
+      alert("Failed to remove todo task.");
+    }
 }
 
-const updateTask = (task) => {
+const updateTask = async (task) => {
   task.completed = !task.completed
+
+  try {
+      const res = await axios.put(`http://127.0.0.1:8000/api/todos/${task.id}/`, {
+        completed: task.completed
+      });
+
+      alert(`Todo task ${task.title} has been updated`)
+
+    } catch (error) {
+      console.error("error", error);
+      alert("Failed to updated todo task.");
+    }
 }
 
 // Computed property to filter tasks based on search input
